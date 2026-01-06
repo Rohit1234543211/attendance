@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Attendance Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls input, .controls select, .controls button {
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .controls input, .controls select {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .controls button {
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .controls button:hover {
+            background: #5568d3;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .present {
+            background: #4caf50;
+            color: white;
+        }
+
+        .absent {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-btn:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .search-filter {
+            margin-bottom: 20px;
+        }
+
+        .export-btn {
+            background: #4caf50;
+            margin-left: auto;
+        }
+
+        .export-btn:hover {
+            background: #45a049;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 School Attendance Tracker</h1>
+        
+        <div class="controls">
+            <input type="text" id="studentName" placeholder="Student Name">
+            <input type="text" id="studentId" placeholder="Student ID">
+            <select id="grade">
+                <option value="">Select Grade</option>
+                <option value="1">Grade 1</option>
+                <option value="2">Grade 2</option>
+                <option value="3">Grade 3</option>
+                <option value="4">Grade 4</option>
+                <option value="5">Grade 5</option>
+                <option value="6">Grade 6</option>
+                <option value="7">Grade 7</option>
+                <option value="8">Grade 8</option>
+                <option value="9">Grade 9</option>
+                <option value="10">Grade 10</option>
+                <option value="11">Grade 11</option>
+                <option value="12">Grade 12</option>
+            </select>
+            <button onclick="addStudent()">Add Student</button>
+            <button class="export-btn" onclick="exportToCSV()">Export CSV</button>
+        </div>
+
+        <div class="search-filter">
+            <input type="text" id="searchInput" placeholder="Search by name or ID..." 
+                   style="width: 100%; padding: 12px; border: 2px solid #667eea; border-radius: 8px;"
+                   onkeyup="filterTable()">
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Students</h3>
+                <div class="number" id="totalStudents">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Present Today</h3>
+                <div class="number" id="presentCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Absent Today</h3>
+                <div class="number" id="absentCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Attendance Rate</h3>
+                <div class="number" id="attendanceRate">0%</div>
+            </div>
+        </div>
+
+        <table id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Grade</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+
+        function addStudent() {
+            const name = document.getElementById('studentName').value.trim();
+            const id = document.getElementById('studentId').value.trim();
+            const grade = document.getElementById('grade').value;
+
+            if (!name || !id || !grade) {
+                alert('Please fill in all fields!');
+                return;
+            }
+
+            if (students.find(s => s.id === id)) {
+                alert('Student ID already exists!');
+                return;
+            }
+
+            students.push({ id, name, grade });
+            localStorage.setItem('students', JSON.stringify(students));
+
+            document.getElementById('studentName').value = '';
+            document.getElementById('studentId').value = '';
+            document.getElementById('grade').value = '';
+
+            renderTable();
+        }
+
+        function toggleAttendance(studentId) {
+            const today = new Date().toISOString().split('T');
+            
+            if (!attendance[today]) {
+                attendance[today] = {};
+            }
+
+            attendance[today][studentId] = !attendance[today][studentId];
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+
+            renderTable();
+        }
+
+        function deleteStudent(studentId) {
+            if (confirm('Are you sure you want to delete this student?')) {
+                students = students.filter(s => s.id !== studentId);
+                localStorage.setItem('students', JSON.stringify(students));
+                renderTable();
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const today = new Date().toISOString().split('T');
+            
+            tbody.innerHTML = '';
+
+            let presentCount = 0;
+            let absentCount = 0;
+
+            students.forEach(student => {
+                const isPresent = attendance[today]?.[student.id] || false;
+                if (isPresent) presentCount++;
+                else absentCount++;
+
+                const row = `
+                    <tr>
+                        <td>${student.id}</td>
+                        <td>${student.name}</td>
+                        <td>${student.grade}</td>
+                        <td>
+                            <button class="status-btn ${isPresent ? 'present' : 'absent'}" 
+                                    onclick="toggleAttendance('${student.id}')">
+                                ${isPresent ? '✓ Present' : '✗ Absent'}
+                            </button>
+                        </td>
+                        <td>${new Date().toLocaleDateString()}</td>
+                        <td>
+                            <button onclick="deleteStudent('${student.id}')" 
+                                    style="background: #f44336; color: white; padding: 8px 16px; 
+                                           border: none; border-radius: 5px; cursor: pointer;">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+            updateStats(presentCount, absentCount);
+        }
+
+        function updateStats(present, absent) {
+            const total = students.length;
+            const rate = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('totalStudents').textContent = total;
+            document.getElementById('presentCount').textContent = present;
+            document.getElementById('absentCount').textContent = absent;
+            document.getElementById('attendanceRate').textContent = rate + '%';
+        }
+
+        function filterTable() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#tableBody tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+
+        function exportToCSV() {
+            const today = new Date().toISOString().split('T');
+            let csv = 'Student ID,Name,Grade,Status,Date\n';
+
+            students.forEach(student => {
+                const isPresent = attendance[today]?.[student.id] || false;
+                csv += `${student.id},${student.name},${student.grade},${isPresent ? 'Present' : 'Absent'},${today}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `attendance_${today}.csv`;
+            a.click();
+        }
+
+        // Initialize
+        renderTable();
+    </script>
+</body>
+</html>
